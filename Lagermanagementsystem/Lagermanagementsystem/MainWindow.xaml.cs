@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Media;
 
 namespace Lagermanagementsystem
 {
@@ -13,6 +14,17 @@ namespace Lagermanagementsystem
         {
             InitializeComponent();
             lager = new Lager(10, 20);
+
+            this.Closed += MainWindow_Closed!;
+        }
+
+        private void MainWindow_Closed(object sender, EventArgs e)
+        {
+            // Überprüfen, ob das LagerWindow noch offen ist
+            if (showWindow != null && showWindow.IsVisible)
+            {
+                showWindow.Close();
+            }
         }
 
         private void BtnEinlagern_Click(object sender, RoutedEventArgs e)
@@ -25,7 +37,7 @@ namespace Lagermanagementsystem
                 return;
             }
 
-            bool erfolgreichEingelagert = Einlagern(artikelName, benoetigteStellplaetze);
+            bool erfolgreichEingelagert = lager.Einlagern(artikelName, benoetigteStellplaetze);
 
             txtOutput.Text = erfolgreichEingelagert ? $"{artikelName} erfolgreich eingelagert" : $"Kein Platz für die Ware.";
             UpdateLagerWindow();
@@ -39,7 +51,7 @@ namespace Lagermanagementsystem
                 return;
             }
 
-            var entfernteWare = Entnehmen(regalIndex, stellplatzIndex);
+            var entfernteWare = lager.Entnehmen(regalIndex, stellplatzIndex);
 
             txtOutput.Text = entfernteWare != null ? $"{entfernteWare} erfolgreich entnommen." : "An diesem Platz ist keine Ware.";
             UpdateLagerWindow();
@@ -47,7 +59,7 @@ namespace Lagermanagementsystem
 
         private void BtnAufraeumen_Click(object sender, RoutedEventArgs e)
         {
-            Aufraeumen();
+            lager.Aufraeumen();
             BtnAnzeigen_Click(sender, e);
             txtOutput.Text = "\nDas Lager wurde aufgeräumt.";
         }
@@ -56,93 +68,16 @@ namespace Lagermanagementsystem
         {
             if (showWindow == null || !showWindow.IsVisible)
             {
-                showWindow = new LagerWindow(lager);
-                showWindow.Left = this.Left + this.Width;
-                showWindow.Top = this.Top;
+                showWindow = new LagerWindow(lager)
+                {
+                    Left = this.Left + this.Width,
+                    Top = this.Top
+                };
                 showWindow.Show();
             }
             else
             {
                 showWindow.UpdateRegalAnsicht();
-            }
-        }
-
-        public bool Einlagern(string artikel, int benoetigteStellsplaetze)
-        {
-            foreach (var regal in lager.Regale)
-            {
-                int freierPlatz = 0;
-                int startIndex = -1;
-
-                // Suche nach zusammenhängenden freien Stellplätzen
-                for (int i = 0; i < regal.Stellplaetze.Count; i++)
-                {
-                    if (!regal.Stellplaetze[i].IstBelegt)
-                    {
-                        if (freierPlatz == 0)
-                        {
-                            startIndex = i;
-                        }
-                        freierPlatz++;
-
-                        // Wenn genügend Platz gefunden wurde, Artikel einlagern
-                        if (freierPlatz == benoetigteStellsplaetze)
-                        {
-                            for (int j = startIndex; j < startIndex + benoetigteStellsplaetze; j++)
-                            {
-                                regal.Stellplaetze[j].Artikel = artikel;
-                                regal.Stellplaetze[j].IstBelegt = true;
-                            }
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        freierPlatz = 0;
-                        startIndex = -1;
-                    }
-                }
-            }
-            return false; // Kein Platz gefunden
-        }
-        public string Entnehmen(int regalIndex, int stellplatzIndex)
-        {
-            var regal = lager.Regale[regalIndex];
-
-            if (regal.Stellplaetze[stellplatzIndex].IstBelegt)
-            {
-                string artikel = regal.Stellplaetze[stellplatzIndex].Artikel;
-
-                regal.Stellplaetze[stellplatzIndex].Artikel = string.Empty;
-                regal.Stellplaetze[stellplatzIndex].IstBelegt = false;
-
-                return artikel;
-            }
-            return null; // Kein Artikel gefunden
-        }
-
-        public void Aufraeumen()
-        {
-            foreach (var regal in lager.Regale)
-            {
-                var artikelListe = regal.Stellplaetze.Where(s => s.IstBelegt).ToList();
-                int index = 0;
-
-                // Alle belegten Stellplätze nach vorne verschieben
-                foreach (var stellplatz in regal.Stellplaetze)
-                {
-                    if (index < artikelListe.Count)
-                    {
-                        stellplatz.Artikel = artikelListe[index].Artikel;
-                        stellplatz.IstBelegt = true;
-                        index++;
-                    }
-                    else
-                    {
-                        stellplatz.Artikel = string.Empty;
-                        stellplatz.IstBelegt = false;
-                    }
-                }
             }
         }
 

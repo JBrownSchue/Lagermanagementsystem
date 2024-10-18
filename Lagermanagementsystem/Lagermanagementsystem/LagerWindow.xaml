@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Lagermanagementsystem"
         mc:Ignorable="d"
-        Title="Das Lager" Height="450" Width="800">
+        Title="Das Lager" Height="450" MinHeight="450" Width="800" MinWidth="800">
     <ScrollViewer>
         <Grid Name="gridRegale"/>
     </ScrollViewer>
